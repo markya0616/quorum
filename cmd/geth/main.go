@@ -102,6 +102,7 @@ var (
 		utils.DevModeFlag,
 		utils.TestnetFlag,
 		utils.RinkebyFlag,
+		utils.OttomanFlag,
 		utils.VMEnableDebugFlag,
 		utils.NetworkIdFlag,
 		utils.RPCCORSDomainFlag,
@@ -117,6 +118,9 @@ var (
 		utils.RaftBlockTimeFlag,
 		utils.RaftJoinExistingFlag,
 		utils.EmitCheckpointsFlag,
+		utils.IstanbulRequestTimeoutFlag,
+		utils.IstanbulBlockPeriodFlag,
+		utils.IstanbulBlockPauseTimeFlag,
 	}
 
 	rpcFlags = []cli.Flag{
