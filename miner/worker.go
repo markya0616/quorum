@@ -75,9 +75,10 @@ type Work struct {
 
 	Block *types.Block // the new block
 
-	header   *types.Header
-	txs      []*types.Transaction
-	receipts []*types.Receipt
+	header          *types.Header
+	txs             []*types.Transaction
+	receipts        []*types.Receipt
+	privateReceipts []*types.Receipt
 
 	createdAt time.Time
 
@@ -330,13 +331,16 @@ func (self *worker) wait() {
 				for _, log := range work.state.Logs() {
 					log.BlockHash = block.Hash()
 				}
+				allReceipts := append(work.receipts, work.privateReceipts...)
 
 				// check if canon block and write transactions
 				if stat == core.CanonStatTy {
 					// This puts transactions in a extra db for rpc
 					core.WriteTxLookupEntries(self.chainDb, block)
 					// Write map map bloom filters
-					core.WriteMipmapBloom(self.chainDb, block.NumberU64(), work.receipts)
+					core.WriteMipmapBloom(self.chainDb, block.NumberU64(), allReceipts)
+					core.WritePrivateBlockBloom(self.chainDb, block.NumberU64(), work.privateReceipts)
+
 					// implicit by posting ChainHeadEvent
 					mustCommitNewWork = false
 				}
@@ -359,7 +363,7 @@ func (self *worker) wait() {
 					if err := core.WriteBlockReceipts(self.chainDb, block.Hash(), block.NumberU64(), receipts); err != nil {
 						log.Warn("Failed writing block receipts", "err", err)
 					}
-				}(block, work.state.Logs(), work.receipts)
+				}(block, work.state.Logs(), allReceipts)
 			}
 			// Insert the block into the set of pending ones to wait for confirmations
 			self.unconfirmed.Insert(block.NumberU64(), block.Hash())
@@ -625,7 +629,7 @@ func (env *Work) commitTransaction(tx *types.Transaction, bc *core.BlockChain, c
 	logs := receipt.Logs
 	if privateReceipt != nil {
 		logs = append(receipt.Logs, privateReceipt.Logs...)
-		env.receipts = append(env.receipts, privateReceipt)
+		env.privateReceipts = append(env.privateReceipts, privateReceipt)
 	}
 	return nil, logs
 }
