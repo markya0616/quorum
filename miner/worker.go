@@ -625,6 +625,7 @@ func (env *Work) commitTransaction(tx *types.Transaction, bc *core.BlockChain, c
 	logs := receipt.Logs
 	if privateReceipt != nil {
 		logs = append(receipt.Logs, privateReceipt.Logs...)
+		env.receipts = append(env.receipts, privateReceipt)
 	}
 	return nil, logs
 }
